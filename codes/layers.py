@@ -361,12 +361,12 @@ class Dropout(Layer):
         #############################################################
         # code here
         if(self.training):
-            np.random.seed(self.seed)
-            indices = np.random.permutation(len(inputs))
-            for index, x in np.ndenumerate(inputs):
-                if(index in indices):
-                    x[index] = x * (1/(1-self.ration)) 
-        outputs = inputs
+            np.random.seed(self.seed) 
+            if self.mask is None:
+                self.mask = np.random.binomial(1, self.ratio, size=inputs.shape) / self.ratio
+            outputs = inputs * self.mask
+        else:
+            outputs = inputs
         #############################################################
         return outputs
 
@@ -383,6 +383,12 @@ class Dropout(Layer):
         out_grads = None
         #############################################################
         # code here
+        self.mask = np.random.binomial(1, self.ratio, size=inputs.shape) / self.ratio
+
+        if self.training == True:
+            out_grads = in_grads * self.mask
+        else:
+            out_grads = in_grads
         #############################################################
         return out_grads
 
