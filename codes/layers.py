@@ -316,6 +316,21 @@ class Pooling(Layer):
         outputs = None
         #############################################################
         # code here
+        out_height = int((inputs.shape[2] + 2 * self.pad - self.pool_height)//self.stride + 1)
+        out_width = int((inputs.shape[3] + 2 * self.pad - self.pool_width)//self.stride + 1)
+
+        X_reshaped = inputs.reshape(inputs.shape[0] * inputs.shape[1], 1, inputs.shape[2], inputs.shape[3])
+        X_col = im2col_indices(X_reshaped, self.pool_height, self.pool_width, padding=self.pad, stride=self.stride)
+
+        if(self.pool_type == 'max'):
+            max_idx = np.argmax(X_col, axis=0)
+            outputs = X_col[max_idx, range(max_idx.size)]
+
+        if(self.pool_type == 'avg'):
+            outputs = np.mean(X_col, axis=0)
+
+        outputs = outputs.reshape(out_height, out_width, inputs.shape[0], inputs.shape[1])
+        outputs = outputs.transpose(2, 3, 0, 1)
         #############################################################
         return outputs
         
@@ -331,8 +346,23 @@ class Pooling(Layer):
         """
         out_grads = None
         #############################################################
-        # code here
+        # code here        
+        X_reshaped = inputs.reshape(inputs.shape[0] * inputs.shape[1], 1, inputs.shape[2], inputs.shape[3])
+        X_col = im2col_indices(X_reshaped, self.pool_height, self.pool_width, padding=self.pad, stride=self.stride)
+
+        dX_col = np.zeros_like(X_col)
+        dinput_grads = input_grads.transpose(2, 3, 0, 1).ravel()
+
+        if self.pool_type == 'max':
+            dX_col[pool_cache, range(dout_col.size)] = dinput_grads
+
+        if self.pool_type == 'avg':
+            dX_col[:, range(dinput_grads.size)] = 1. / dX_col.shape[0] * dinput_grads
+
+        out_grads = col2im_indices(dX_col, (inputs.shape[0] * inputs.shape[1], 1, inputs.shape[2], inputs.shape[3]), self.pool_height, self.pool_width, padding=self.pad, stride=self.stride)
+        out_grads = out_grads.reshape(inputs.shape)
         #############################################################
+
         return out_grads
 
 class Dropout(Layer):
@@ -383,9 +413,10 @@ class Dropout(Layer):
         out_grads = None
         #############################################################
         # code here
-        self.mask = np.random.binomial(1, self.ratio, size=inputs.shape) / self.ratio
-
         if self.training == True:
+            np.random.seed(self.seed) 
+            if self.mask is None:
+                self.mask = np.random.binomial(1, self.ratio, size=inputs.shape) / self.ratio
             out_grads = in_grads * self.mask
         else:
             out_grads = in_grads
