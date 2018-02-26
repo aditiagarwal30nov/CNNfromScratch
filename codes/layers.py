@@ -72,6 +72,7 @@ class FCLayer(Layer):
         outputs = None
         #############################################################
         # code here
+        outputs = (inputs @ self.weights) + self.bias 
         #############################################################
         return outputs
 
@@ -88,6 +89,9 @@ class FCLayer(Layer):
         out_grads = None
         #############################################################
         # code here
+        self.w_grad = inputs.T @ in_grads
+        self.b_grad = np.sum(in_grads, axis=0)
+        out_grads = in_grads @ self.weights.T
         #############################################################
         return out_grads
 
@@ -351,10 +355,11 @@ class Pooling(Layer):
         X_col = im2col_indices(X_reshaped, self.pool_height, self.pool_width, padding=self.pad, stride=self.stride)
 
         dX_col = np.zeros_like(X_col)
-        dinput_grads = input_grads.transpose(2, 3, 0, 1).ravel()
+        dinput_grads = in_grads.transpose(2, 3, 0, 1).ravel()
 
         if self.pool_type == 'max':
-            dX_col[pool_cache, range(dout_col.size)] = dinput_grads
+            max_idx = np.argmax(X_col, axis=0)
+            dX_col[max_idx, range(dinput_grads.size)] = dinput_grads
 
         if self.pool_type == 'avg':
             dX_col[:, range(dinput_grads.size)] = 1. / dX_col.shape[0] * dinput_grads
