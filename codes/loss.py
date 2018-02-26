@@ -29,6 +29,10 @@ class SoftmaxCrossEntropy(Loss):
         super(SoftmaxCrossEntropy, self).__init__()
         self.num_class = num_class
 
+    def softmax(X):
+        eX = np.exp((X.T - np.max(X, axis=1)).T)
+        return (eX.T / eX.sum(axis=1)).T
+
     def forward(self, inputs, targets):
         """Forward pass
 
@@ -44,6 +48,12 @@ class SoftmaxCrossEntropy(Loss):
         probs = None
         #############################################################
         # code here
+        m = inputs.shape[0]
+        exps = np.exp((inputs.T - np.max(inputs, axis=1)).T)
+        prob = (exps.T / exps.sum(axis=1)).T       
+        log_likelihood = -np.log(prob[range(m),targets])
+        outputs = np.sum(log_likelihood) / m
+        probs = log_likelihood
         #############################################################
         return outputs, probs
 
@@ -60,6 +70,14 @@ class SoftmaxCrossEntropy(Loss):
         out_grads = None
         #############################################################
         # code here
+        m = inputs.shape[0]
+
+        exps = np.exp((inputs.T - np.max(inputs, axis=1)).T)
+        prob = (exps.T / exps.sum(axis=1)).T
+        prob[range(m), targets] -= 1.
+        prob /= m
+
+        out_grads = prob
         #############################################################
         return out_grads
 
