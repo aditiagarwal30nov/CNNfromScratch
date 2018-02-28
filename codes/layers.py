@@ -179,7 +179,7 @@ class Convolution(Layer):
         W_col = self.weights.reshape(self.out_channel, -1)
         h_out = int((inputs.shape[2] + 2 * self.pad - self.kernel_h)//self.stride + 1)
         w_out = int((inputs.shape[3] + 2 * self.pad - self.kernel_w)//self.stride + 1)
-        X_col_mult_W_col = (W_col @ X_col) + np.array([self.bias,]*X_col.shape[1]).transpose()
+        X_col_mult_W_col = (W_col @ X_col) + self.bias.reshape(-1, 1)
         out =  X_col_mult_W_col.reshape(self.out_channel, h_out, w_out, inputs.shape[0])
         outputs = out.transpose(3, 0, 1, 2)
         return outputs
@@ -200,8 +200,7 @@ class Convolution(Layer):
         #############################################################
         out_grads = np.zeros(inputs.shape)
 
-        db = np.sum(in_grads, axis=(0, 2, 3))
-        self.b_grad = db.reshape(in_grads.shape[1], -1)
+        self.b_grad = np.sum(in_grads, axis=(0, 2, 3))
 
         inputs_reshaped = in_grads.transpose(1, 2, 3, 0).reshape(self.out_channel, -1)
         X_col = im2col_indices(inputs, self.kernel_h, self.kernel_w, padding=self.pad, stride=self.stride)

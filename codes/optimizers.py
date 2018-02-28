@@ -132,8 +132,12 @@ class Adam(Optimizer):
         for k in list(xs.keys()):
         #############################################################
         # remove pass and code in for loop
+            self.moments[k] = self.beta_1 * self.moments[k] + (1-self.beta_1) * xs_grads[k]
+            mt = self.moments[k] / (1-self.beta_1 ** iteration)
+            self.accumulators[k] = self.beta_2 * self.accumulators[k] + (1-self.beta_2) * (xs_grads[k]**2)
+            vt = self.accumulators[k] / (1-self.beta_2 ** iteration)
+            new_xs[k] += - self.lr * mt / (np.sqrt(vt) + self.epsilon)
         #############################################################
-            pass
         return new_xs
 
 class Adagrad(Optimizer):
