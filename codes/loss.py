@@ -88,6 +88,7 @@ class L2(Loss):
         # Arguments
             w: float, weight decay ratio.
         """
+        super(L2, self).__init__()
         self.w = w
 
     def forward(self, params):

@@ -129,15 +129,18 @@ class Adam(Optimizer):
                 self.moments[k] = np.zeros(v.shape)
                 self.accumulators[k] = np.zeros(v.shape)
 
+        
+        if iteration == 0:
+            iteration += 1
         for k in list(xs.keys()):
         #############################################################
         # remove pass and code in for loop
             self.moments[k] = self.beta_1 * self.moments[k] + (1-self.beta_1) * xs_grads[k]
-            mt = self.moments[k] / (1-self.beta_1 ** iteration)
+            mt = self.moments[k] / (1 - self.beta_1**iteration)
             self.accumulators[k] = self.beta_2 * self.accumulators[k] + (1-self.beta_2) * (xs_grads[k]**2)
-            vt = self.accumulators[k] / (1-self.beta_2 ** iteration)
-            new_xs[k] += - self.lr * mt / (np.sqrt(vt) + self.epsilon)
-        #############################################################
+            vt = self.accumulators[k] / (1 - self.beta_2**iteration)
+            new_xs[k] = xs[k] - self.lr * mt / (np.sqrt(vt) + self.epsilon)
+    #############################################################
         return new_xs
 
 class Adagrad(Optimizer):
@@ -219,7 +222,7 @@ class RMSprop(Optimizer):
             self.lr = self.sheduler(self.sheduler_func, iteration)
         if not self.accumulators:
             self.accumulators = {}
-            for k,v in xs.ietms():
+            for k,v in xs.items():
                 self.accumulators[k] = np.zeros(v.shape)
         for k in list(xs.keys()):
             self.accumulators[k] = self.rho * self.accumulators[k] + (1 - self.rho) * xs_grads[k]**2
