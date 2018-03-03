@@ -45,17 +45,19 @@ class SoftmaxCrossEntropy(Loss):
             probs: numpy array with shape (batch, num_class), probability to each category with respect to each image
         """
         outputs = None
-        probs = None
         #############################################################
         # code here
-        m = inputs.shape[0]
-        exps = np.exp((inputs.T - np.max(inputs, axis=1)).T)
-        prob = (exps.T / exps.sum(axis=1)).T       
-        log_likelihood = -np.log(prob[range(m),targets])
-        outputs = np.sum(log_likelihood) / m
-        probs = log_likelihood
+        N = inputs.shape[0]
+        logits = inputs - np.max(inputs, axis=1, keepdims=True)
+        Z = np.sum(np.exp(logits), axis=1, keepdims=True)
+        log_probs = logits - np.log(Z)
+        outputs = np.exp(log_probs)
+        loss = -np.sum(log_probs[np.arange(N), targets]) / N
+        # outputs = probs.copy()
+        # outputs[np.arange(N), targets] -= 1
+        # outputs /= N
         #############################################################
-        return outputs, probs
+        return loss, outputs
 
     def backward(self, inputs, targets):
         """Backward pass

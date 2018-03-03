@@ -22,7 +22,6 @@ class Model():
         self.inputs = []
         layer_inputs = inputs
         for l, layer in enumerate(self.layers):
-            # print(layer.name, layer_inputs)
             self.inputs.append(layer_inputs)
             if l==len(self.layers)-1:
                 layer_inputs, probs = layer.forward(layer_inputs, targets)

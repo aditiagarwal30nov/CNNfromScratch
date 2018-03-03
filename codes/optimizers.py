@@ -122,24 +122,21 @@ class Adam(Optimizer):
         if self.sheduler_func:
             self.lr = self.sheduler(self.sheduler_func, iteration)
         # initialization of moments and accumulators
-        if not self.accumulators or self.moments:
+        if not self.accumulators or not self.moments:
             self.moments = {}
             self.accumulators = {}
             for k,v in xs.items():
                 self.moments[k] = np.zeros(v.shape)
                 self.accumulators[k] = np.zeros(v.shape)
-
-        
-        if iteration == 0:
-            iteration += 1
-        for k in list(xs.keys()):
-        #############################################################
-        # remove pass and code in for loop
-            self.moments[k] = self.beta_1 * self.moments[k] + (1-self.beta_1) * xs_grads[k]
-            mt = self.moments[k] / (1 - self.beta_1**iteration)
-            self.accumulators[k] = self.beta_2 * self.accumulators[k] + (1-self.beta_2) * (xs_grads[k]**2)
-            vt = self.accumulators[k] / (1 - self.beta_2**iteration)
-            new_xs[k] = xs[k] - self.lr * mt / (np.sqrt(vt) + self.epsilon)
+        if iteration > 0:
+            for k in list(xs.keys()):
+            #############################################################
+            # remove pass and code in for loop
+                self.moments[k] = self.beta_1 * self.moments[k] + (1-self.beta_1) * xs_grads[k]
+                mt = self.moments[k] / (1 - self.beta_1**iteration)
+                self.accumulators[k] = self.beta_2 * self.accumulators[k] + (1-self.beta_2) * (xs_grads[k]**2)
+                vt = self.accumulators[k] / (1 - self.beta_2**iteration)
+                new_xs[k] = xs[k] - self.lr * mt / (np.sqrt(vt) + self.epsilon)
     #############################################################
         return new_xs
 
@@ -226,5 +223,5 @@ class RMSprop(Optimizer):
                 self.accumulators[k] = np.zeros(v.shape)
         for k in list(xs.keys()):
             self.accumulators[k] = self.rho * self.accumulators[k] + (1 - self.rho) * xs_grads[k]**2
-            new_xs[k] = xs[k] - self.lr * xs_grads[k] / (np.sqrt(self.accumulators[k]) + self.epsilon)
+            new_xs[k] = xs[k] - self.lr * xs_grads[k] / (np.sqrt(self.accumulators[k] + self.epsilon))
         return new_xs
